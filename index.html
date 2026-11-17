@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GALACTICA STRIKE</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #030817;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        header {
+            padding: 25px 10px;
+            background: linear-gradient(90deg, #071b45, #102d65);
+            border-bottom: 2px solid #00d9ff;
+        }
+        h1 {
+            color: #00eaff;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px #00aaff;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            width: min(95%, 600px);
+            background: #050d20;
+            border: 2px solid #087dff;
+            border-radius: 10px;
+        }
+        button {
+            padding: 13px 25px;
+            margin: 8px;
+            border: 0;
+            border-radius: 8px;
+            background: #00bde9;
+            color: #001020;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        #info { color: #00eaff; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GALACTICA STRIKE</h1>
+        <p>A Space Action Game by AKPROMEDIA</p>
+    </header>
+
+    <h2>Verteidige die Galaxie!</h2>
+    <p id="info">Punkte: 0</p>
+
+    <canvas id="game" width="600" height="450"></canvas>
+
+    <button onclick="startGame()">SPIEL STARTEN</button>
+
+    <script>
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+
+        let score = 0;
+        let shipX = 300;
+        let bullets = [];
+        let enemies = [];
+        let running = false;
+
+        function draw() {
+            ctx.fillStyle = "#050d20";
+            ctx.fillRect(0, 0, 600, 450);
+
+            // Sterne
+            for (let i = 0; i < 50; i++) {
+                ctx.fillStyle = "white";
+                ctx.fillRect((i * 97) % 600, (i * 53) % 450, 2, 2);
+            }
+
+            // Raumschiff
+            ctx.fillStyle = "#00eaff";
+            ctx.beginPath();
+            ctx.moveTo(shipX, 390);
+            ctx.lineTo(shipX - 22, 430);
+            ctx.lineTo(shipX + 22, 430);
+            ctx.closePath();
+            ctx.fill();
+
+            // Schüsse
+            ctx.fillStyle = "#ffff00";
+            bullets.forEach(b => {
+                ctx.fillRect(b.x - 2, b.y, 4, 12);
+            });
+
+            // Gegner
+            ctx.fillStyle = "#ff3355";
+            enemies.forEach(e => {
+                ctx.fillRect(e.x - 15, e.y, 30, 22);
+            });
+        }
+
+        function startGame() {
+            score = 0;
+            bullets = [];
+            enemies = [];
+            shipX = 300;
+            running = true;
+            update();
+        }
+
+        function update() {
+            if (!running) return;
+
+            bullets.forEach(b => b.y -= 7);
+            enemies.forEach(e => e.y += 2);
+
+            if (Math.random() < 0.025) {
+                enemies.push({
+                    x: Math.random() * 560 + 20,
+                    y: 0
+                });
+            }
+
+            bullets.forEach(b => {
+                enemies.forEach(e => {
+                    if (Math.abs(b.x - e.x) < 20 &&
+                        Math.abs(b.y - e.y) < 20 &&
+                        !e.hit) {
+                        e.hit = true;
+                        score += 10;
+                    }
+                });
+            });
+
+            enemies = enemies.filter(e => !e.hit && e.y < 450);
+            bullets = bullets.filter(b => b.y > 0);
+
+            document.getElementById("info").textContent =
+                "Punkte: " + score;
+
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowLeft") shipX = Math.max(25, shipX - 20);
+            if (e.key === "ArrowRight") shipX = Math.min(575, shipX + 20);
+            if (e.code === "Space" && running) {
+                bullets.push({ x: shipX, y: 390 });
+            }
+        });
+
+        draw();
+    </script>
+</body>
+</html>
